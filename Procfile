@@ -1,0 +1,1 @@
+web: gunicorn isolation_system.wsgi
