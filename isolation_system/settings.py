@@ -14,31 +14,27 @@ from pathlib import Path
 import os
 import dj_database_url
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# =========================
+# SECURITY
+# =========================
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY","fallback-secret-key")
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = "True"
+ALLOWED_HOSTS = os.environ.get(
+    "ALLOWED_HOSTS",
+    "localhost,127.0.0.1"
+).split(",")
 
-ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",")
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get("DATABASE_URL")
-    )
-}
-
-# Application definition
+# =========================
+# APPLICATIONS
+# =========================
 
 INSTALLED_APPS = [
-    'jazzmin', 
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # production static
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,16 +56,14 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'isolation_system.urls'
-"LOGIN_URL = '/admin/login/'"
-LOGIN_REDIRECT_URL = '/dashboard/'
-"LOGOUT_REDIRECT_URL = '/admin/login/'"
-LOGIN_URL = '/login/'
 
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 
-
-
-
+# =========================
+# TEMPLATES
+# =========================
 
 TEMPLATES = [
     {
@@ -87,87 +82,67 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'isolation_system.wsgi.application'
 
+# =========================
+# DATABASE
+# =========================
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+if os.environ.get("DATABASE_URL"):
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.environ.get("DATABASE_URL"),
+            conn_max_age=600
+        )
+    }
+else:
+    # Local uchun SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get("DATABASE_URL")
-    )
-}
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
+# =========================
+# PASSWORD VALIDATION
+# =========================
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
+# =========================
+# INTERNATIONAL
+# =========================
 
 LANGUAGE_CODE = 'uz'
-
 TIME_ZONE = 'Asia/Tashkent'
-
 USE_I18N = True
-
 USE_TZ = True
 
+# =========================
+# STATIC FILES
+# =========================
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-JAZZMIN_SETTINGS = {
 
+# =========================
+# JAZZMIN
+# =========================
+
+JAZZMIN_SETTINGS = {
     "site_title": "Klinika Admin",
     "site_header": "Klinika boshqaruv paneli",
     "site_brand": "Admin Panel",
     "welcome_sign": "Klinika monitoring tizimiga xush kelibsiz",
     "copyright": "© 2026 Sog‘liq Monitoring Tizimi",
-
-    "site_logo": "logo.png",
-    "login_logo": "logo.png",
-
-    # 🔥 Medical yashil theme
     "theme": "minty",
-
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    "order_with_respect_to": ["auth", "team"],
-
-    "icons": {
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.group": "fas fa-users",
-        "team": "fas fa-hospital",
-        "team.teammember": "fas fa-user-md",
-        "team.healthdata": "fas fa-heartbeat",
-        "team.clinicsettings": "fas fa-clinic-medical",
-    },
-
-    "topmenu_links": [
-        {"name": "Dashboard", "url": "/dashboard/"},
-    ],
 }
