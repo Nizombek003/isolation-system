@@ -186,3 +186,14 @@ def generate_report(request):
 
     doc.build(elements)
     return response
+from django.contrib.auth.models import User
+
+def create_admin(request):
+    if not User.objects.filter(username="admin").exists():
+        User.objects.create_superuser(
+            username="admin",
+            email="admin@example.com",
+            password="12345678"
+        )
+        return HttpResponse("Superuser yaratildi!")
+    return HttpResponse("Superuser mavjud.")
