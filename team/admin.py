@@ -12,13 +12,8 @@ class TeamMemberAdmin(admin.ModelAdmin):
     list_display = ("full_name", "position")
     search_fields = ("full_name",)
 
-    def has_module_permission(self, request):
-        # Doctor ko‘rmasin
-        if request.user.groups.filter(name='Doctor').exists():
-            return False
+    def has_view_permission(self, request, obj=None):
         return request.user.is_superuser or request.user.groups.filter(name='Admin').exists()
-
-
 # ==========================================
 # HEALTH DATA ADMIN
 # ==========================================
@@ -30,12 +25,8 @@ class HealthDataAdmin(admin.ModelAdmin):
     search_fields = ("member__full_name",)
     readonly_fields = ("risk_score", "risk_level")
 
-    def has_module_permission(self, request):
-        # Doctor va Admin ko‘rsin
-        if request.user.groups.filter(name='Doctor').exists():
-            return True
-        return request.user.is_superuser or request.user.groups.filter(name='Admin').exists()
-
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_superuser or request.user.groups.filter(name='Admin').exists() or request.user.groups.filter(name='Doctor').exists()
 
 # ==========================================
 # CLINIC SETTINGS (FAKAT 1 TA BO‘LADI)
@@ -47,11 +38,9 @@ class ClinicSettingsAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
     def has_add_permission(self, request):
-        # Faqat 1 ta ClinicSettings bo‘lishi mumkin
         if ClinicSettings.objects.exists():
             return False
-        return request.user.is_superuser or request.user.groups.filter(name='Admin').exists()
-
+        return request.user.is_superuser
     def has_module_permission(self, request):
         # Doctor ko‘rmasin
         if request.user.groups.filter(name='Doctor').exists():
