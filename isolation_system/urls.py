@@ -16,11 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth.decorators import user_passes_test
-
-
-# 🔒 Faqat superuser admin panelga kira oladi
-admin.site.login = user_passes_test(lambda u: u.is_superuser)(admin.site.login)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
