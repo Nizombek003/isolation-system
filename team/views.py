@@ -53,13 +53,9 @@ def add_health(request):
 # DASHBOARD
 # ==================================================
 
-@login_required
 def dashboard(request):
 
     clinic = ClinicSettings.objects.first()
-
-    if not (is_admin(request.user) or is_doctor(request.user) or is_viewer(request.user)):
-        return redirect('login')
 
     stats = get_risk_statistics()
 
@@ -97,7 +93,6 @@ def dashboard(request):
 # MONTHLY TREND
 # ==================================================
 
-@login_required
 def monthly_trend(request):
 
     six_months_ago = timezone.now() - timedelta(days=180)
@@ -128,7 +123,6 @@ def monthly_trend(request):
 # PDF HISOBOT
 # ==================================================
 
-@login_required
 def generate_report(request):
 
     clinic = ClinicSettings.objects.first()
