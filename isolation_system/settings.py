@@ -34,7 +34,9 @@ ALLOWED_HOSTS = os.environ.get(
 # =========================
 
 INSTALLED_APPS = [
-    'jazzmin',
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -139,14 +141,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # =========================
-# JAZZMIN
+# UNFOLD
 # =========================
 
-JAZZMIN_SETTINGS = {
-    "site_title": "Klinika Admin",
-    "site_header": "Klinika boshqaruv paneli",
-    "site_brand": "Admin Panel",
-    "welcome_sign": "Klinika monitoring tizimiga xush kelibsiz",
-    "copyright": "© 2026 Sog‘liq Monitoring Tizimi",
-    "theme": "minty",
+UNFOLD = {
+    "SITE_TITLE": "Klinika Admin",
+    "SITE_HEADER": "Klinika boshqaruv paneli",
+    "SITE_SYMBOL": "health_and_safety",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
 }
