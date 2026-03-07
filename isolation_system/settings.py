@@ -146,8 +146,89 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 UNFOLD = {
     "SITE_TITLE": "Klinika Admin",
-    "SITE_HEADER": "Klinika boshqaruv paneli",
+    "SITE_HEADER": "Sog'liq Monitoring Tizimi",
+    "SITE_SUBHEADER": "Klinika boshqaruv paneli",
     "SITE_SYMBOL": "health_and_safety",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
+    "SHOW_BACK_BUTTON": True,
+
+    "COLORS": {
+        "font": {
+            "subtle-light": "107 114 128",
+            "subtle-dark": "156 163 175",
+            "default-light": "17 24 39",
+            "default-dark": "243 244 246",
+            "important-light": "17 24 39",
+            "important-dark": "243 244 246",
+        },
+        "primary": {
+            "50": "240 253 244",
+            "100": "220 252 231",
+            "200": "187 247 208",
+            "300": "134 239 172",
+            "400": "74 222 128",
+            "500": "34 197 94",
+            "600": "22 163 74",
+            "700": "21 128 61",
+            "800": "20 83 45",
+            "900": "14 60 33",
+            "950": "5 46 22",
+        },
+    },
+
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Asosiy",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Boshqaruv paneli",
+                        "icon": "dashboard",
+                        "link": "/admin/",
+                    },
+                ],
+            },
+            {
+                "title": "Jamoa",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Jamoa a'zolari",
+                        "icon": "group",
+                        "link": "/admin/team/teammember/",
+                    },
+                    {
+                        "title": "Sog'liq ma'lumotlari",
+                        "icon": "monitor_heart",
+                        "link": "/admin/team/healthdata/",
+                    },
+                    {
+                        "title": "Klinika sozlamalari",
+                        "icon": "settings",
+                        "link": "/admin/team/clinicsettings/",
+                    },
+                ],
+            },
+            {
+                "title": "Tizim",
+                "separator": True,
+                "items": [
+                    {
+                        "title": "Foydalanuvchilar",
+                        "icon": "person",
+                        "link": "/admin/auth/user/",
+                    },
+                    {
+                        "title": "Guruhlar",
+                        "icon": "groups",
+                        "link": "/admin/auth/group/",
+                    },
+                ],
+            },
+        ],
+    },
 }
