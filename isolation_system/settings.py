@@ -151,24 +151,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 UNFOLD = {
     "SITE_TITLE": "Klinika Admin",
-    "SITE_HEADER": "Sog'liq Monitoring Tizimi",
-    "SITE_SUBHEADER": "Klinika boshqaruv paneli",
+    "SITE_HEADER": "Sog'liq Monitoring",
+    "SITE_SUBHEADER": "Klinika boshqaruv tizimi",
     "SITE_SYMBOL": "health_and_safety",
     "SHOW_HISTORY": True,
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_BACK_BUTTON": True,
+    "SHOW_LANGUAGES": False,
 
     "COLORS": {
         "font": {
             "subtle-light": "107 114 128",
             "subtle-dark": "156 163 175",
             "default-light": "17 24 39",
-            "default-dark": "243 244 246",
+            "default-dark": "229 231 235",
             "important-light": "17 24 39",
             "important-dark": "243 244 246",
         },
         "primary": {
-            "50": "240 253 244",
+            "50":  "240 253 244",
             "100": "220 252 231",
             "200": "187 247 208",
             "300": "134 239 172",
@@ -182,29 +183,44 @@ UNFOLD = {
         },
     },
 
+    "EXTENSIONS": {
+        "modeltranslation": {
+            "flags": {},
+        },
+    },
+
     "SIDEBAR": {
         "show_search": True,
-        "show_all_applications": True,
+        "show_all_applications": False,
         "navigation": [
             {
                 "title": "Asosiy",
-                "separator": True,
+                "separator": False,
+                "collapsible": False,
                 "items": [
                     {
                         "title": "Boshqaruv paneli",
                         "icon": "dashboard",
                         "link": "/admin/",
+                        "permission": lambda request: request.user.is_superuser,
+                    },
+                    {
+                        "title": "Saytga o'tish",
+                        "icon": "open_in_new",
+                        "link": "/dashboard/",
                     },
                 ],
             },
             {
-                "title": "Jamoa",
+                "title": "Jamoa boshqaruvi",
                 "separator": True,
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Jamoa a'zolari",
                         "icon": "group",
                         "link": "/admin/team/teammember/",
+                        "badge": "team.views.get_member_count",
                     },
                     {
                         "title": "Sog'liq ma'lumotlari",
@@ -213,18 +229,19 @@ UNFOLD = {
                     },
                     {
                         "title": "Klinika sozlamalari",
-                        "icon": "settings",
+                        "icon": "settings_suggest",
                         "link": "/admin/team/clinicsettings/",
                     },
                 ],
             },
             {
-                "title": "Tizim",
+                "title": "Tizim boshqaruvi",
                 "separator": True,
+                "collapsible": True,
                 "items": [
                     {
                         "title": "Foydalanuvchilar",
-                        "icon": "person",
+                        "icon": "manage_accounts",
                         "link": "/admin/auth/user/",
                     },
                     {
@@ -236,6 +253,16 @@ UNFOLD = {
             },
         ],
     },
+
+    "TABS": [
+        {
+            "models": ["team.teammember"],
+            "items": [
+                {"title": "Jamoa a'zolari", "link": "/admin/team/teammember/"},
+                {"title": "Sog'liq ma'lumotlari", "link": "/admin/team/healthdata/"},
+            ],
+        },
+    ],
 }
 
 # Session brauzer yopilganda tugaydi
