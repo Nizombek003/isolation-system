@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ patient.full_name }} | Bemor kartasi</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --green: #00c896;
+            --yellow: #ffb830;
+            --red: #ff5a5f;
+            --blue: #3aa0ff;
+            --bg: #06111d;
+            --card: rgba(14, 22, 36, 0.94);
+            --border: rgba(255,255,255,0.08);
+            --text: #e6edf7;
+            --muted: #7f8ca3;
+            --shadow: 0 18px 54px rgba(0,0,0,0.26);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            background:
+                radial-gradient(circle at top right, rgba(58,160,255,0.12), transparent 20%),
+                radial-gradient(circle at top left, rgba(0,200,150,0.12), transparent 24%),
+                linear-gradient(160deg, #06111d 0%, #091624 42%, #040911 100%);
+            min-height: 100vh;
+        }
+        .wrap { max-width: 1240px; margin: 0 auto; padding: 34px 34px 64px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .back-link, .action-link, .save-btn {
+            text-decoration: none; color: var(--text); border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; font-size: 13px;
+        }
+        .save-btn { background: linear-gradient(135deg, #00c896, #77ffd9); color: #06111d; border: none; font-weight: 700; }
+        .hero, .grid, .metrics { display: grid; gap: 18px; }
+        .hero { grid-template-columns: 1.2fr 0.8fr; margin-bottom: 18px; }
+        .grid { grid-template-columns: 1.3fr 0.7fr; margin-bottom: 18px; }
+        .metrics { grid-template-columns: repeat(4, 1fr); margin-bottom: 18px; }
+        .panel, .hero-card, .metric, .history-card, .editor-card {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow);
+        }
+        .hero-card, .panel, .metric, .history-card, .editor-card { padding: 24px; }
+        .eyebrow { color: var(--green); text-transform: uppercase; letter-spacing: 0.16em; font-size: 11px; font-weight: 700; }
+        h1, h2 { font-family: 'Syne', sans-serif; }
+        h1 { font-size: clamp(34px, 5vw, 54px); line-height: 1; margin: 12px 0 16px; }
+        h2 { font-size: 18px; margin-bottom: 18px; }
+        .hero-copy { color: var(--muted); line-height: 1.85; }
+        .meta-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 18px; }
+        .meta-item strong, .timeline-item strong { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; }
+        .metric-value { font-family: 'Syne', sans-serif; font-size: 30px; margin: 10px 0 6px; }
+        .metric-label, .muted, .timeline-item span, .history-meta, .flash { color: var(--muted); font-size: 13px; }
+        .pill {
+            display: inline-flex; align-items: center; justify-content: center; border-radius: 999px;
+            padding: 7px 12px; font-size: 12px; font-weight: 700;
+        }
+        .pill.low { background: rgba(0,200,150,0.14); color: #7bf1ca; }
+        .pill.medium { background: rgba(255,184,48,0.16); color: #ffd17c; }
+        .pill.high { background: rgba(255,90,95,0.16); color: #ffb2b5; }
+        .history-list { display: flex; flex-direction: column; gap: 14px; }
+        .history-row {
+            padding: 16px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px;
+        }
+        .history-row:last-child { border-bottom: none; }
+        .history-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+        .timeline-list { display: flex; flex-direction: column; gap: 12px; }
+        .timeline-item {
+            padding: 14px 16px; border-radius: 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border);
+            display: flex; justify-content: space-between; gap: 12px;
+        }
+        .note-form textarea {
+            width: 100%; min-height: 130px; padding: 14px 16px; border-radius: 16px; resize: vertical;
+            background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--border); outline: none;
+        }
+        .note-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; }
+        .flash {
+            margin-bottom: 12px; padding: 10px 12px; border-radius: 12px; background: rgba(0,200,150,0.12); color: #aaf5dc;
+            border: 1px solid rgba(0,200,150,0.18);
+        }
+        canvas { max-height: 300px; }
+        @media (max-width: 1040px) {
+            .hero, .grid, .metrics { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            .wrap { padding: 22px 18px 48px; }
+            .topbar { flex-direction: column; align-items: stretch; gap: 10px; }
+            .note-actions { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="topbar">
+        <a href="{% url 'dashboard' %}" class="back-link">Dashboardga qaytish</a>
+        <a href="/admin/team/healthdata/add/" class="action-link">Yangi health record qo'shish</a>
+    </div>
+
+    <section class="hero">
+        <div class="hero-card">
+            <div class="eyebrow">Bemor kartasi</div>
+            <h1>{{ patient.full_name }}</h1>
+            <div class="hero-copy">
+                {% if patient.notes %}
+                    {{ patient.notes }}
+                {% else %}
+                    Ushbu bemor uchun kuzatuv, kasallik tarixi va harorat/risk dinamikasi shu sahifada jamlangan.
+                {% endif %}
+            </div>
+            <div class="meta-grid">
+                <div class="meta-item"><strong>Kasallik turi</strong>{{ patient.disease_type.name|default:"Kiritilmagan" }}</div>
+                <div class="meta-item"><strong>Mas'ul shifokor</strong>{{ patient.assigned_doctor.username|default:"Biriktirilmagan" }}</div>
+                <div class="meta-item"><strong>Mutaxassislik</strong>{{ patient.assigned_doctor.doctor_profile.specialty.name|default:"Kiritilmagan" }}</div>
+                <div class="meta-item"><strong>Holati</strong>{{ patient.get_status_display }}</div>
+            </div>
+        </div>
+        <div class="panel">
+            <h2>So'nggi holat</h2>
+            {% if latest_entry %}
+                <div class="timeline-list">
+                    <div class="timeline-item">
+                        <div>
+                            <strong>Xavf darajasi</strong>
+                            <span>{{ latest_entry.get_risk_level_display }}</span>
+                        </div>
+                        <div class="pill {% if latest_entry.risk_level == 'yuqori' %}high{% elif latest_entry.risk_level == 'orta' %}medium{% else %}low{% endif %}">
+                            {{ latest_entry.risk_score|default:0 }} ball
+                        </div>
+                    </div>
+                    <div class="timeline-item"><div><strong>Harorat</strong><span>{{ latest_entry.temperature }} C</span></div><div><strong>Sana</strong><span>{{ latest_entry.created_at|date:"d.m.Y H:i" }}</span></div></div>
+                    <div class="timeline-item"><div><strong>Kiritgan shifokor</strong><span>{{ latest_entry.entered_by.username|default:"-" }}</span></div><div><strong>Tavsiya</strong><span>{{ latest_entry.recommendation|default:"-" }}</span></div></div>
+                </div>
+            {% else %}
+                <div class="muted">Hozircha bu bemor uchun health record yo'q.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    {% if can_edit_notes %}
+    <section class="editor-card" style="margin-bottom:18px;">
+        <h2>Shifokor izohi</h2>
+        {% if note_saved %}<div class="flash">Izoh yangilandi.</div>{% endif %}
+        <form method="post" class="note-form">
+            {% csrf_token %}
+            <textarea name="notes" placeholder="Bemor bo'yicha qo'shimcha izoh, tavsiya yoki kuzatuv yozing...">{{ patient.notes }}</textarea>
+            <div class="note-actions">
+                <div class="muted">Bu izoh bemor kartasining yuqori qismida ko'rinadi.</div>
+                <button type="submit" class="save-btn">Izohni saqlash</button>
+            </div>
+        </form>
+    </section>
+    {% endif %}
+
+    <section class="metrics">
+        <div class="metric"><div class="metric-label">Yosh</div><div class="metric-value">{{ patient.age }}</div><div class="muted">Bemor yoshi</div></div>
+        <div class="metric"><div class="metric-label">Lavozim</div><div class="metric-value">{{ patient.position }}</div><div class="muted">Ish joyidagi roli</div></div>
+        <div class="metric"><div class="metric-label">Jami yozuvlar</div><div class="metric-value">{{ history|length }}</div><div class="muted">So'nggi ko'rsatilgan tarix</div></div>
+        <div class="metric"><div class="metric-label">Status</div><div class="metric-value">{{ patient.get_status_display }}</div><div class="muted">Aktual kuzatuv bosqichi</div></div>
+    </section>
+
+    <section class="grid">
+        <div class="panel">
+            <h2>Risk va harorat dinamikasi</h2>
+            <canvas id="patientTrend"></canvas>
+        </div>
+        <div class="panel">
+            <h2>Status timeline</h2>
+            <div class="timeline-list">
+                {% for item in status_timeline %}
+                    <div class="timeline-item">
+                        <div>
+                            <strong>{{ item.risk_level|default:"Noma'lum" }}</strong>
+                            <span>{{ item.latest_at|date:"d.m.Y H:i" }}</span>
+                        </div>
+                        <div class="pill {% if item.risk_level == 'yuqori' %}high{% elif item.risk_level == 'orta' %}medium{% else %}low{% endif %}">
+                            {{ item.total }} marta
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="muted">Timeline uchun ma'lumot yo'q.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="history-card">
+        <h2>Health history</h2>
+        <div class="history-list">
+            {% for item in history %}
+                <div class="history-row">
+                    <div>
+                        <div class="history-title">{{ item.created_at|date:"d.m.Y H:i" }}</div>
+                        <div class="history-meta">
+                            Harorat: {{ item.temperature }} C | Kiritgan: {{ item.entered_by.username|default:"-" }}
+                        </div>
+                    </div>
+                    <div class="pill {% if item.risk_level == 'yuqori' %}high{% elif item.risk_level == 'orta' %}medium{% else %}low{% endif %}">
+                        {{ item.get_risk_level_display|default:"-" }}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="muted">Tarix mavjud emas.</div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<script>
+    const labels = {{ history_labels_json|safe }};
+    const scores = {{ history_scores_json|safe }};
+    const temperatures = {{ history_temperatures_json|safe }};
+
+    new Chart(document.getElementById('patientTrend'), {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Risk ball',
+                    data: scores,
+                    borderColor: '#00c896',
+                    backgroundColor: 'rgba(0, 200, 150, 0.10)',
+                    fill: true,
+                    tension: 0.35,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Harorat',
+                    data: temperatures,
+                    borderColor: '#3aa0ff',
+                    backgroundColor: 'rgba(58, 160, 255, 0.08)',
+                    fill: false,
+                    tension: 0.35,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: { legend: { labels: { color: '#e6edf7' } } },
+            scales: {
+                x: { ticks: { color: '#7f8ca3' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+                y: { beginAtZero: true, ticks: { color: '#7f8ca3' }, grid: { color: 'rgba(255,255,255,0.06)' } },
+                y1: { position: 'right', ticks: { color: '#7f8ca3' }, grid: { drawOnChartArea: false } }
+            }
+        }
+    });
+</script>
+</body>
+</html>

@@ -2,184 +2,403 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>{{ clinic.name|default:"Jamoat Salomatligi" }}</title>
+    <title>{{ clinic.name|default:"Klinika monitoringi" }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --green:#00c896;--yellow:#ffb830;--red:#ff4757;
-            --bg:#080d1a;--card:#0f1724;--card2:#16202e;
-            --border:rgba(255,255,255,0.07);--text:#e2e8f4;--muted:#5a6a85;
+            --green: #00c896;
+            --yellow: #ffb830;
+            --red: #ff5a5f;
+            --blue: #3aa0ff;
+            --bg: #07111f;
+            --card: rgba(14, 22, 36, 0.92);
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #e6edf7;
+            --muted: #7f8ca3;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
         }
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh}
-        body::before{content:'';position:fixed;top:-200px;left:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(0,200,150,0.06) 0%,transparent 65%);pointer-events:none;z-index:0}
-
-        header{position:sticky;top:0;z-index:100;background:rgba(8,13,26,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0 48px;height:68px;display:flex;align-items:center;justify-content:space-between}
-        .logo{display:flex;align-items:center;gap:12px}
-        .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,#00c896,#00f0b5);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 20px rgba(0,200,150,0.3)}
-        .logo-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;letter-spacing:-0.3px}
-        .logo-sub{font-size:11px;color:var(--muted);margin-top:1px}
-        .header-right{display:flex;align-items:center;gap:12px}
-        .live-pill{display:flex;align-items:center;gap:7px;padding:6px 14px;background:rgba(0,200,150,0.08);border:1px solid rgba(0,200,150,0.18);border-radius:20px;font-size:12px;color:var(--green);font-weight:500}
-        .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 1.6s ease-in-out infinite}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-        .admin-btn{padding:7px 16px;border:1px solid var(--border);border-radius:9px;color:var(--muted);text-decoration:none;font-size:13px;transition:0.2s}
-        .admin-btn:hover{color:var(--text);border-color:rgba(255,255,255,0.14)}
-
-        main{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:56px 48px 80px}
-
-        .hero{margin-bottom:52px}
-        .hero-tag{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--green);margin-bottom:18px}
-        .hero h1{font-family:'Syne',sans-serif;font-size:clamp(38px,5.5vw,62px);font-weight:800;line-height:1.08;letter-spacing:-2px;margin-bottom:16px}
-        .hero h1 em{font-style:normal;background:linear-gradient(135deg,#00c896 30%,#00f0c0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .hero-desc{font-size:16px;color:var(--muted);line-height:1.75;max-width:480px}
-
-        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
-        .stat{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 28px 24px;position:relative;overflow:hidden;transition:transform 0.22s,border-color 0.22s;cursor:default}
-        .stat:hover{transform:translateY(-5px)}
-        .stat.low:hover{border-color:rgba(0,200,150,0.3)}
-        .stat.med:hover{border-color:rgba(255,184,48,0.3)}
-        .stat.high:hover{border-color:rgba(255,71,87,0.3)}
-        .stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:20px 20px 0 0}
-        .stat.low::after{background:var(--green)}
-        .stat.med::after{background:var(--yellow)}
-        .stat.high::after{background:var(--red)}
-        .stat-emoji{font-size:28px;margin-bottom:18px;display:block}
-        .stat-num{font-family:'Syne',sans-serif;font-size:56px;font-weight:800;line-height:1;margin-bottom:6px}
-        .stat.low .stat-num{color:var(--green)}
-        .stat.med .stat-num{color:var(--yellow)}
-        .stat.high .stat-num{color:var(--red)}
-        .stat-label{font-size:13px;color:var(--muted);font-weight:500}
-
-        .grid-2-1{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;margin-bottom:18px}
-        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-        .panel{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px}
-        .panel-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:22px;color:var(--text)}
-        canvas{max-height:260px}
-
-        .rec{border-radius:20px;padding:30px;border:1px solid rgba(0,200,150,0.18);background:linear-gradient(135deg,rgba(0,200,150,0.06),transparent)}
-        .rec.warn{border-color:rgba(255,184,48,0.2);background:linear-gradient(135deg,rgba(255,184,48,0.06),transparent)}
-        .rec.danger{border-color:rgba(255,71,87,0.2);background:linear-gradient(135deg,rgba(255,71,87,0.06),transparent)}
-        .rec-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;letter-spacing:1.8px;text-transform:uppercase;color:var(--green);margin-bottom:14px}
-        .rec-text{font-size:15px;line-height:1.75;color:var(--text);margin-bottom:22px}
-        .pdf-btn{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#050d18;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;padding:11px 22px;border-radius:11px;text-decoration:none;transition:0.2s}
-        .pdf-btn:hover{background:#00a87e;transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,200,150,0.22)}
-
-        .info-row{display:flex;align-items:center;gap:13px;padding:13px 0;border-bottom:1px solid var(--border)}
-        .info-row:last-child{border-bottom:none}
-        .info-ico{width:36px;height:36px;background:var(--card2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-        .info-v{font-size:14px}
-        .info-k{font-size:11px;color:var(--muted);margin-top:2px}
-
-        /* BAR CHART uchun alohida panel */
-        .chart-full{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:26px;margin-bottom:18px}
-
-        footer{text-align:center;padding:24px;color:var(--muted);font-size:13px;border-top:1px solid var(--border);position:relative;z-index:1}
-
-        @media(max-width:1024px){
-            header{padding:0 24px}
-            main{padding:40px 24px 64px}
-            .stats{grid-template-columns:1fr}
-            .grid-2-1,.grid-2{grid-template-columns:1fr}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(0, 200, 150, 0.14), transparent 28%),
+                radial-gradient(circle at top right, rgba(58, 160, 255, 0.12), transparent 24%),
+                linear-gradient(160deg, #07111f 0%, #091625 42%, #060b14 100%);
+        }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 42px;
+            background: rgba(5, 11, 20, 0.72);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+        .brand { display: flex; gap: 14px; align-items: center; }
+        .brand-mark {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, #00c896, #3aa0ff);
+            box-shadow: 0 0 24px rgba(0, 200, 150, 0.2);
+        }
+        .brand-title { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; letter-spacing: -0.04em; }
+        .brand-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+        .top-actions { display: flex; gap: 12px; align-items: center; }
+        .chip, .mini-chip {
+            padding: 8px 14px; border-radius: 999px; font-size: 12px;
+            color: var(--green); background: rgba(0, 200, 150, 0.1); border: 1px solid rgba(0, 200, 150, 0.18);
+        }
+        .mini-chip { color: var(--blue); background: rgba(58, 160, 255, 0.1); border-color: rgba(58, 160, 255, 0.18); }
+        .admin-btn, .detail-link, .filter-btn, .clear-btn {
+            color: var(--text); text-decoration: none; font-size: 13px;
+            padding: 10px 16px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border);
+        }
+        .filter-btn { background: linear-gradient(135deg, #00c896, #67f5c9); color: #07111f; font-weight: 700; border: none; }
+        .detail-link { display: inline-flex; align-items: center; justify-content: center; padding: 9px 14px; }
+        main { max-width: 1320px; margin: 0 auto; padding: 42px 42px 72px; }
+        .hero, .two-col, .three-col, .doctor-grid, .summary-strip, .stats, .case-grid { display: grid; gap: 18px; }
+        .hero { grid-template-columns: 1.4fr 1fr; margin-bottom: 24px; }
+        .two-col { grid-template-columns: 1.4fr 1fr; margin-bottom: 18px; }
+        .three-col { grid-template-columns: 1.2fr 1fr 1fr; margin-bottom: 18px; }
+        .doctor-grid { grid-template-columns: 1.1fr 0.9fr; margin-bottom: 18px; }
+        .summary-strip { grid-template-columns: repeat(4, 1fr); margin-bottom: 18px; }
+        .stats { grid-template-columns: repeat(3, 1fr); margin-bottom: 18px; }
+        .case-grid { grid-template-columns: repeat(2, 1fr); }
+        .hero-card, .panel, .summary-card, .case-card, .recommendation, .filter-panel {
+            background: var(--card); border: 1px solid var(--border); border-radius: 24px; box-shadow: var(--shadow);
+        }
+        .hero-card, .panel, .summary-card, .case-card, .recommendation, .filter-panel { padding: 24px; }
+        .hero-card { padding: 34px; position: relative; overflow: hidden; }
+        .hero-card::after {
+            content: ""; position: absolute; inset: auto -80px -90px auto; width: 240px; height: 240px;
+            border-radius: 50%; background: radial-gradient(circle, rgba(0, 200, 150, 0.18), transparent 68%);
+        }
+        .eyebrow { display: inline-flex; gap: 8px; align-items: center; color: var(--green); text-transform: uppercase; letter-spacing: 0.18em; font-size: 11px; font-weight: 700; margin-bottom: 16px; }
+        .hero-card h1 { font-family: 'Syne', sans-serif; font-size: clamp(38px, 5vw, 62px); line-height: 0.98; letter-spacing: -0.05em; margin-bottom: 16px; }
+        .hero-card h1 span { color: #7fead1; }
+        .hero-card p, .recommendation p, .meta, .stat-label, .summary-label, .filter-help { color: var(--muted); line-height: 1.8; font-size: 14px; }
+        .recommendation { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; }
+        .recommendation strong, .panel-title, .filter-title { font-family: 'Syne', sans-serif; font-size: 16px; }
+        .pdf-btn {
+            display: inline-flex; align-items: center; justify-content: center; padding: 12px 18px; border-radius: 14px; text-decoration: none;
+            color: #06131d; background: linear-gradient(135deg, #00c896, #77ffd9); font-weight: 700; font-size: 13px; width: fit-content;
+        }
+        .stat-number, .summary-value { font-family: 'Syne', sans-serif; line-height: 1; }
+        .stat-number { font-size: 56px; margin: 10px 0 8px; }
+        .summary-value { font-size: 30px; margin-top: 10px; }
+        .list { display: flex; flex-direction: column; gap: 12px; }
+        .list-row, .case-row { display: flex; justify-content: space-between; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+        .list-row:last-child, .case-row:last-child { border-bottom: none; }
+        .list-title, .case-name { font-size: 15px; font-weight: 700; color: var(--text); }
+        .pill {
+            display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 6px 12px; font-size: 12px; font-weight: 700;
+        }
+        .pill.low { background: rgba(0, 200, 150, 0.15); color: #7bf1ca; }
+        .pill.medium { background: rgba(255, 184, 48, 0.16); color: #ffd17c; }
+        .pill.high { background: rgba(255, 90, 95, 0.16); color: #ffb2b5; }
+        .case-top { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .case-meta { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 14px; }
+        .meta strong { display: block; color: var(--text); font-size: 14px; margin-bottom: 4px; }
+        .doctor-banner {
+            padding: 22px 24px; border-radius: 24px; border: 1px solid rgba(58, 160, 255, 0.18);
+            background: linear-gradient(135deg, rgba(58, 160, 255, 0.12), rgba(0, 200, 150, 0.08)); margin-bottom: 18px;
+        }
+        .doctor-banner h2 { font-family: 'Syne', sans-serif; font-size: 24px; margin: 10px 0; }
+        .doctor-banner p { color: var(--muted); max-width: 760px; line-height: 1.8; }
+        .filter-panel { margin-bottom: 18px; }
+        .filter-form { display: grid; grid-template-columns: 1.4fr 1fr 1fr auto auto; gap: 12px; align-items: end; }
+        .filter-field label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+        .filter-field input, .filter-field select {
+            width: 100%; background: rgba(255,255,255,0.04); color: var(--text); border: 1px solid var(--border);
+            padding: 12px 14px; border-radius: 14px; outline: none;
+        }
+        canvas { max-height: 280px; }
+        footer { text-align: center; color: var(--muted); padding: 28px; font-size: 13px; }
+        @media (max-width: 1100px) {
+            .hero, .two-col, .three-col, .doctor-grid, .summary-strip, .stats, .case-grid, .filter-form { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            header { padding: 16px 20px; }
+            main { padding: 26px 20px 56px; }
+            .hero-card, .panel, .summary-card, .case-card, .recommendation, .filter-panel { padding: 20px; }
+            .hero-card h1 { font-size: 38px; }
         }
     </style>
 </head>
 <body>
-
 <header>
-    <div class="logo">
-        <div class="logo-icon">🏥</div>
+    <div class="brand">
+        <div class="brand-mark"></div>
         <div>
-            <div class="logo-name">{{ clinic.name|default:"Jamoat Salomatligi" }}</div>
-            <div class="logo-sub">Sog'liq monitoring tizimi</div>
+            <div class="brand-title">{{ clinic.name|default:"Klinika monitoringi" }}</div>
+            <div class="brand-sub">Shifokorlar va bemorlar uchun jonli kuzatuv paneli</div>
         </div>
     </div>
-    <div class="header-right">
-        <div class="live-pill"><div class="live-dot"></div> Jonli</div>
-        <a href="/admin/" class="admin-btn">⚙ Admin</a>
+    <div class="top-actions">
+        {% if is_doctor_dashboard %}<div class="mini-chip">Mening panelim</div>{% endif %}
+        <div class="chip">Jonli holat</div>
+        <a href="/admin/" class="admin-btn">Admin panel</a>
     </div>
 </header>
 
 <main>
-    <div class="hero">
-        <div class="hero-tag">📊 Real vaqtdagi holat</div>
-        <h1>Jamoat<br><em>sog'lig'i</em><br>monitoringi</h1>
-        <p class="hero-desc">Jamoa a'zolarining sog'liq holati va xavf darajalari bo'yicha real vaqtdagi statistika.{% if clinic.address %} {{ clinic.address }}.{% endif %}</p>
-    </div>
-
-    <!-- STAT CARDS -->
-    <div class="stats">
-        <div class="stat low">
-            <span class="stat-emoji">✅</span>
-            <div class="stat-num">{{ stats.low|default:0 }}</div>
-            <div class="stat-label">Past xavf — sog'lom</div>
+    <section class="hero">
+        <div class="hero-card">
+            <div class="eyebrow">Klinika boshqaruvi</div>
+            <h1>Bemorlar, <span>kasalliklar</span> va shifokorlar yuklamasi bir oynada</h1>
+            <p>
+                Dashboard endi nafaqat risk ko'rsatadi, balki kim qaysi kasallik bilan kuzatuvda ekani,
+                qaysi shifokorda qancha bemor borligi va so'nggi kiritilgan holatlar oqimini ham chiqaradi.
+                {% if clinic.address %} {{ clinic.address }}.{% endif %}
+            </p>
         </div>
-        <div class="stat med">
-            <span class="stat-emoji">⚠️</span>
-            <div class="stat-num">{{ stats.medium|default:0 }}</div>
-            <div class="stat-label">O'rta xavf — kuzatuv</div>
+        <div class="recommendation {% if stats.high > 0 %}danger{% elif stats.medium > 0 %}warn{% endif %}">
+            <div>
+                <strong>Tizim tavsiyasi</strong>
+                <p>{{ recommendation }}</p>
+            </div>
+            <a href="{% url 'report' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="pdf-btn">PDF hisobotni yuklab olish</a>
         </div>
-        <div class="stat high">
-            <span class="stat-emoji">🚨</span>
-            <div class="stat-num">{{ stats.high|default:0 }}</div>
-            <div class="stat-label">Yuqori xavf — izolyatsiya</div>
-        </div>
-    </div>
+    </section>
 
-    <!-- UMUMIY BAR CHART -->
-    <div class="chart-full">
-        <div class="panel-title">📊 Umumiy xavf taqsimoti</div>
-        <canvas id="riskChart"></canvas>
-    </div>
+    {% if doctor_focus %}
+    <section class="doctor-banner">
+        <div class="eyebrow">Shifokor mini dashboard</div>
+        <h2>{{ request.user.get_username }} uchun personal nazorat paneli</h2>
+        <p>
+            {% if doctor_focus.profile and doctor_focus.profile.specialty %}
+                Mutaxassislik: {{ doctor_focus.profile.specialty.name }}.
+            {% else %}
+                Mutaxassislik hali biriktirilmagan.
+            {% endif %}
+            Sizning bemorlaringiz, yangilangan holatlar va xavfli holatlar shu blokda ajratib ko'rsatiladi.
+        </p>
+    </section>
 
-    <!-- TREND + HAFTALIK -->
-    <div class="grid-2-1">
+    <section class="filter-panel">
+        <div class="filter-title">Mening bemorlarim bo'yicha qidiruv va filtr</div>
+        <p class="filter-help">Ism, lavozim, kasallik yoki note bo'yicha qidiring. Filtrlar grafik va kartalarga ham ta'sir qiladi.</p>
+        <form method="get" class="filter-form">
+            <div class="filter-field">
+                <label for="q">Qidiruv</label>
+                <input id="q" type="text" name="q" value="{{ active_filters.q }}" placeholder="Masalan: Gulnoza, bronxit, izoh...">
+            </div>
+            <div class="filter-field">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">Barchasi</option>
+                    {% for value, label in status_options %}
+                        <option value="{{ value }}" {% if active_filters.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="filter-field">
+                <label for="disease">Kasallik turi</label>
+                <select id="disease" name="disease">
+                    <option value="">Barchasi</option>
+                    {% for disease_id, disease_name in disease_options %}
+                        <option value="{{ disease_id }}" {% if active_filters.disease == disease_id|stringformat:"s" %}selected{% endif %}>{{ disease_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="filter-btn">Filtrlash</button>
+            <a href="{% url 'dashboard' %}" class="clear-btn">Tozalash</a>
+        </form>
+    </section>
+
+    <section class="doctor-grid">
         <div class="panel">
-            <div class="panel-title">📈 Oxirgi 6 oylik trend</div>
+            <div class="panel-title">Mening ko'rsatkichlarim</div>
+            <div class="summary-strip" style="margin-bottom:0;">
+                <div class="summary-card">
+                    <div class="summary-label">Mening bemorlarim</div>
+                    <div class="summary-value">{{ doctor_focus.patient_total }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Faol kuzatuv</div>
+                    <div class="summary-value">{{ doctor_focus.active_patients }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Yuqori xavf</div>
+                    <div class="summary-value">{{ doctor_focus.high_risk_patients }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Xona</div>
+                    <div class="summary-value">{{ doctor_focus.profile.room|default:"-" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Status bo'yicha taqsimot</div>
+            <div class="list">
+                {% for item in doctor_focus.status_breakdown %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ item.status }}</div>
+                            <div class="meta">Mening bemorlar holati</div>
+                        </div>
+                        <div class="pill medium">{{ item.total }}</div>
+                    </div>
+                {% empty %}
+                    <div class="meta">Sizga hali bemor biriktirilmagan.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="stats">
+        <div class="panel">
+            <div class="summary-label">Past xavf</div>
+            <div class="stat-number" style="color: var(--green);">{{ stats.low|default:0 }}</div>
+            <div class="stat-label">Barqaror kuzatuvdagi holatlar</div>
+        </div>
+        <div class="panel">
+            <div class="summary-label">O'rta xavf</div>
+            <div class="stat-number" style="color: var(--yellow);">{{ stats.medium|default:0 }}</div>
+            <div class="stat-label">Qo'shimcha monitoring talab qiladi</div>
+        </div>
+        <div class="panel">
+            <div class="summary-label">Yuqori xavf</div>
+            <div class="stat-number" style="color: var(--red);">{{ stats.high|default:0 }}</div>
+            <div class="stat-label">Tezkor aralashuv kerak bo'lgan holatlar</div>
+        </div>
+    </section>
+
+    <section class="summary-strip">
+        <div class="summary-card">
+            <div class="summary-label">Jami bemorlar</div>
+            <div class="summary-value">{{ patient_summary.total }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Shifokorga biriktirilgan</div>
+            <div class="summary-value">{{ patient_summary.assigned }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Faol kuzatuv</div>
+            <div class="summary-value">{{ patient_summary.active }}</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Shifokorlar soni</div>
+            <div class="summary-value">{{ patient_summary.doctors }}</div>
+        </div>
+    </section>
+
+    <section class="two-col">
+        <div class="panel">
+            <div class="panel-title">Umumiy xavf taqsimoti</div>
+            <canvas id="riskChart"></canvas>
+        </div>
+        <div class="panel">
+            <div class="panel-title">Haftalik taqsimot</div>
+            <canvas id="weeklyChart"></canvas>
+        </div>
+    </section>
+
+    <section class="three-col">
+        <div class="panel">
+            <div class="panel-title">Oxirgi 6 oylik trend</div>
             <canvas id="monthlyTrendChart"></canvas>
         </div>
         <div class="panel">
-            <div class="panel-title">🍩 Haftalik taqsimot</div>
-            <canvas id="weeklyChart"></canvas>
-        </div>
-    </div>
-
-    <!-- TAVSIYA + KLINIKA -->
-    <div class="grid-2">
-        <div class="rec {% if stats.high > 0 %}danger{% elif stats.medium > 0 %}warn{% endif %}">
-            <div class="rec-tag">🩺 Tizim tavsiyasi</div>
-            <p class="rec-text">{{ recommendation }}</p>
-            <a href="{% url 'report' %}" class="pdf-btn">📄 PDF hisobotni yuklab olish</a>
+            <div class="panel-title">Kasallik turlari topi</div>
+            <div class="list">
+                {% for item in disease_stats %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ item.disease_type__name }}</div>
+                            <div class="meta">Ushbu yo'nalishda kuzatuvdagi bemorlar</div>
+                        </div>
+                        <div class="pill low">{{ item.total }}</div>
+                    </div>
+                {% empty %}
+                    <div class="meta">Hozircha kasallik turlari bo'yicha ma'lumot yo'q.</div>
+                {% endfor %}
+            </div>
         </div>
         <div class="panel">
-            <div class="panel-title">🏥 Klinika ma'lumotlari</div>
-            {% if clinic %}
-                <div class="info-row"><div class="info-ico">🏥</div><div><div class="info-v">{{ clinic.name }}</div><div class="info-k">Nomi</div></div></div>
-                {% if clinic.phone %}<div class="info-row"><div class="info-ico">📞</div><div><div class="info-v">{{ clinic.phone }}</div><div class="info-k">Telefon</div></div></div>{% endif %}
-                {% if clinic.address %}<div class="info-row"><div class="info-ico">📍</div><div><div class="info-v">{{ clinic.address }}</div><div class="info-k">Manzil</div></div></div>{% endif %}
-            {% else %}
-                <div class="info-row"><div class="info-ico">ℹ️</div><div><div class="info-v">Ma'lumot kiritilmagan</div><div class="info-k">Admin paneldan qo'shing</div></div></div>
-            {% endif %}
+            <div class="panel-title">Shifokor yuklamasi</div>
+            <div class="list">
+                {% for item in doctor_load %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ item.assigned_doctor__username }}</div>
+                            <div class="meta">{{ item.assigned_doctor__doctor_profile__specialty__name|default:"Mutaxassislik kiritilmagan" }}</div>
+                        </div>
+                        <div class="pill medium">{{ item.total }} bemor</div>
+                    </div>
+                {% empty %}
+                    <div class="meta">Shifokor biriktirilgan bemorlar hali yo'q.</div>
+                {% endfor %}
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-title">So'nggi bemor holatlari</div>
+        <div class="case-grid">
+            {% for case in recent_cases %}
+                <div class="case-card">
+                    <div class="case-top">
+                        <div>
+                            <div class="case-name">{{ case.member.full_name }}</div>
+                            <div class="meta">{{ case.member.disease_type.name|default:"Kasallik turi kiritilmagan" }}</div>
+                        </div>
+                        <div class="pill {% if case.risk_level == 'yuqori' %}high{% elif case.risk_level == 'orta' %}medium{% else %}low{% endif %}">
+                            {{ case.get_risk_level_display|default:"-" }}
+                        </div>
+                    </div>
+                    <div class="case-meta">
+                        <div class="meta">
+                            <strong>Shifokor</strong>
+                            {{ case.member.assigned_doctor.username|default:"Biriktirilmagan" }}
+                        </div>
+                        <div class="meta">
+                            <strong>Harorat</strong>
+                            {{ case.temperature }} C
+                        </div>
+                        <div class="meta">
+                            <strong>Ball</strong>
+                            {{ case.risk_score|default:0 }}
+                        </div>
+                        <div class="meta">
+                            <strong>Sana</strong>
+                            {{ case.created_at|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                    <a href="{% url 'patient_detail' case.member.id %}" class="detail-link">Bemor kartasini ochish</a>
+                </div>
+            {% empty %}
+                <div class="meta">Hozircha sog'liq yozuvlari mavjud emas.</div>
+            {% endfor %}
+        </div>
+    </section>
 </main>
 
-<footer>© 2026 — {{ clinic.name|default:"Sog'liq monitoring tizimi" }} &nbsp;·&nbsp; Barcha huquqlar himoyalangan</footer>
+<footer>{{ clinic.name|default:"Klinika monitoringi" }} - 2026</footer>
 
 <script>
-    const C = {green:'#00c896', yellow:'#ffb830', red:'#ff4757', muted:'#5a6a85', grid:'rgba(255,255,255,0.05)'};
+    const C = {
+        green: '#00c896',
+        yellow: '#ffb830',
+        red: '#ff5a5f',
+        muted: '#7f8ca3',
+        grid: 'rgba(255,255,255,0.06)'
+    };
 
-    const low    = Number("{{ stats.low|default:0 }}");
+    const low = Number("{{ stats.low|default:0 }}");
     const medium = Number("{{ stats.medium|default:0 }}");
-    const high   = Number("{{ stats.high|default:0 }}");
-
-    const weeklyPast   = Number("{{ weekly_stats.past|default:0 }}");
-    const weeklyOrta   = Number("{{ weekly_stats.orta|default:0 }}");
+    const high = Number("{{ stats.high|default:0 }}");
+    const weeklyPast = Number("{{ weekly_stats.past|default:0 }}");
+    const weeklyOrta = Number("{{ weekly_stats.orta|default:0 }}");
     const weeklyYuqori = Number("{{ weekly_stats.yuqori|default:0 }}");
 
-    // UMUMIY BAR
     new Chart(document.getElementById('riskChart'), {
         type: 'bar',
         data: {
@@ -187,7 +406,7 @@
             datasets: [{
                 data: [low, medium, high],
                 backgroundColor: [C.green, C.yellow, C.red],
-                borderRadius: 10,
+                borderRadius: 12,
                 borderWidth: 0
             }]
         },
@@ -201,7 +420,6 @@
         }
     });
 
-    // HAFTALIK DOUGHNUT
     new Chart(document.getElementById('weeklyChart'), {
         type: 'doughnut',
         data: {
@@ -215,42 +433,47 @@
         },
         options: {
             responsive: true,
-            cutout: '72%',
-            plugins: { legend: { position: 'bottom', labels: { color: C.muted, font: { size: 12 }, padding: 14 } } }
+            cutout: '70%',
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: C.muted, font: { size: 12 }, padding: 14 }
+                }
+            }
         }
     });
 
-    // MONTHLY TREND
-    fetch("{% url 'monthly_trend' %}")
-      .then(r => r.json())
-      .then(data => {
-        new Chart(document.getElementById('monthlyTrendChart'), {
-            type: 'line',
-            data: {
-                labels: data.labels,
-                datasets: [{
-                    label: "O'rtacha risk ball",
-                    data: data.values,
-                    borderColor: C.green,
-                    backgroundColor: 'rgba(0,200,150,0.07)',
-                    borderWidth: 2.5,
-                    tension: 0.45,
-                    fill: true,
-                    pointBackgroundColor: C.green,
-                    pointRadius: 4,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { ticks: { color: C.muted, font: { size: 11 } }, grid: { color: C.grid } },
-                    y: { ticks: { color: C.muted, font: { size: 11 } }, grid: { color: C.grid }, beginAtZero: true }
+    const trendUrl = "{% url 'monthly_trend' %}" + window.location.search;
+    fetch(trendUrl)
+        .then(response => response.json())
+        .then(data => {
+            new Chart(document.getElementById('monthlyTrendChart'), {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: "O'rtacha risk ball",
+                        data: data.values,
+                        borderColor: C.green,
+                        backgroundColor: 'rgba(0, 200, 150, 0.10)',
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: C.green,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: C.muted }, grid: { color: C.grid } },
+                        y: { beginAtZero: true, ticks: { color: C.muted }, grid: { color: C.grid } }
+                    }
                 }
-            }
+            });
         });
-      });
 </script>
 </body>
 </html>
