@@ -2,7 +2,7 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <title>{{ clinic.name|default:"Klinika monitoringi" }}</title>
+    <title>{{ clinic.name|default:"Jamoat salomatligi va izolyatsiya tavsiyalari" }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -136,8 +136,8 @@
     <div class="brand">
         <div class="brand-mark"></div>
         <div>
-            <div class="brand-title">{{ clinic.name|default:"Klinika monitoringi" }}</div>
-            <div class="brand-sub">Shifokorlar va bemorlar uchun jonli kuzatuv paneli</div>
+            <div class="brand-title">{{ clinic.name|default:"Jamoat salomatligi va izolyatsiya tavsiyalari tizimi" }}</div>
+            <div class="brand-sub">Jamoani izolyatsiya qilishga tavsiyalar — bemorlar va shifokorlar monitoringi</div>
         </div>
     </div>
     <div class="top-actions">
@@ -150,18 +150,22 @@
 <main>
     <section class="hero">
         <div class="hero-card">
-            <div class="eyebrow">Klinika boshqaruvi</div>
-            <h1>Bemorlar, <span>kasalliklar</span> va shifokorlar yuklamasi bir oynada</h1>
+            <div class="eyebrow">Jamoat salomatligi va barqarorlik</div>
+            <h1>Bemorlar, <span>izolyatsiya tavsiyalari</span> va shifokorlar yuklamasi</h1>
             <p>
-                Dashboard endi nafaqat risk ko'rsatadi, balki kim qaysi kasallik bilan kuzatuvda ekani,
-                qaysi shifokorda qancha bemor borligi va so'nggi kiritilgan holatlar oqimini ham chiqaradi.
+                Tizim jamoani izolyatsiya qilishga tavsiyalar berish va operatsion samaradorlikni oshirish uchun
+                noaniq ko'p mezonli xavf baholash asosida ishlaydi. Bemorlar, kasallik turlari, so'nggi holatlar va
+                izolyatsiya markazlari boshqaruvi shu panelda.
                 {% if clinic.address %} {{ clinic.address }}.{% endif %}
             </p>
         </div>
         <div class="recommendation {% if stats.high > 0 %}danger{% elif stats.medium > 0 %}warn{% endif %}">
             <div>
-                <strong>Tizim tavsiyasi</strong>
+                <strong>Izolyatsiya bo'yicha tizim tavsiyasi</strong>
                 <p>{{ recommendation }}</p>
+                {% if isolation_centers and stats.high > 0 %}
+                <p class="meta" style="margin-top:10px;">Faol izolyatsiya markazlari: {% for c in isolation_centers %}{{ c.name }}{% if not forloop.last %}, {% endif %}{% endfor %}.</p>
+                {% endif %}
             </div>
             <a href="{% url 'report' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="pdf-btn">PDF hisobotni yuklab olish</a>
         </div>
@@ -381,7 +385,7 @@
     </section>
 </main>
 
-<footer>{{ clinic.name|default:"Klinika monitoringi" }} - 2026</footer>
+<footer>{{ clinic.name|default:"Jamoat salomatligi va izolyatsiya tavsiyalari tizimi" }} — BMI, 2026</footer>
 
 <script>
     const C = {

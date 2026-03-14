@@ -18,7 +18,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from .logic import get_risk_statistics
-from .models import ClinicSettings, DoctorProfile, HealthData, TeamMember
+from .models import ClinicSettings, DoctorProfile, HealthData, IsolationCenter, TeamMember
 
 
 class CustomLoginView(LoginView):
@@ -202,14 +202,18 @@ def dashboard(request):
 
     recent_cases = dashboard_queryset[:6]
 
+    isolation_centers = list(IsolationCenter.objects.filter(is_active=True)[:5])
     if stats["high"] > 0:
         recommendation = "Yuqori xavf aniqlangan. To'liq izolyatsiya va shifokor nazorati tavsiya etiladi."
+        if isolation_centers:
+            recommendation += " Yuqori xavfli bemorlarni izolyatsiya markazlariga yo'naltirish mumkin (Admin → Izolyatsiya markazlari)."
     elif stats["medium"] > 0:
         recommendation = "O'rta xavf holatlari bor. Masofaviy ish va qayta ko'rik tavsiya etiladi."
     else:
         recommendation = "Holat barqaror. Rejalashtirilgan monitoringni davom ettiring."
 
     context = {
+        "isolation_centers": isolation_centers,
         "stats": stats,
         "weekly_stats": weekly_stats,
         "recommendation": recommendation,
@@ -293,7 +297,7 @@ def generate_report(request):
     elements = []
     styles = getSampleStyleSheet()
 
-    title = clinic.name if clinic else "Klinika sog'liq monitoring hisoboti"
+    title = clinic.name if clinic else "Jamoat salomatligi va izolyatsiya tavsiyalari — sog'liq hisoboti"
     elements.append(Paragraph(f"<b>{title}</b>", styles["Title"]))
     elements.append(Spacer(1, 0.3 * inch))
     elements.append(Paragraph(f"Sana: {now().date()}", styles["Normal"]))

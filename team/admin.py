@@ -13,6 +13,7 @@ from .models import (
     DoctorProfile,
     DoctorSpecialty,
     HealthData,
+    IsolationCenter,
     TeamMember,
 )
 
@@ -280,6 +281,25 @@ class HealthDataAdmin(ModelAdmin):
             color,
             label,
         )
+
+
+@admin.register(IsolationCenter)
+class IsolationCenterAdmin(ModelAdmin):
+    list_display = ("name", "address_short", "capacity", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("name", "address", "notes")
+
+    @display(description="Manzil")
+    def address_short(self, obj):
+        if not obj.address:
+            return "-"
+        return obj.address[:50] + "..." if len(obj.address) > 50 else obj.address
+
+    fieldsets = (
+        ("Izolyatsiya markazi (jamoat salomatligi)", {
+            "fields": ("name", "address", "capacity", "is_active", "notes"),
+        }),
+    )
 
 
 @admin.register(ClinicSettings)

@@ -100,6 +100,23 @@ class TeamMember(models.Model):
         return self.full_name
 
 
+class IsolationCenter(models.Model):
+    """Izolyatsiya markazi — jamoat salomatligi va tezkor joylashtirish uchun (topshiriq varaqasi talabi)."""
+    name = models.CharField(_("Markaz nomi"), max_length=200)
+    address = models.TextField(_("Manzil"), blank=True)
+    capacity = models.PositiveIntegerField(_("Sig'im (kishi)"), default=0, help_text=_("Qabul qila oladigan bemorlar soni"))
+    is_active = models.BooleanField(_("Faol"), default=True)
+    notes = models.TextField(_("Izoh"), blank=True)
+
+    class Meta:
+        verbose_name = _("Izolyatsiya markazi")
+        verbose_name_plural = _("Izolyatsiya markazlari")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class ClinicSettings(models.Model):
     name = models.CharField("Klinika nomi", max_length=255)
     address = models.TextField("Manzil", blank=True)
