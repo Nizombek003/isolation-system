@@ -24,8 +24,11 @@ ALLOWED_HOSTS = os.environ.get(
 
 CSRF_TRUSTED_ORIGINS = [
     "https://isolation-system.onrender.com",
-    "https://*.onrender.com",
 ]
+# Render yoki boshqa domen qo'shilsa, vergul bilan ajratib yozing
+_extra_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").strip()
+if _extra_origins:
+    CSRF_TRUSTED_ORIGINS.extend(origin.strip() for origin in _extra_origins.split(",") if origin.strip())
 
 # =========================
 # APPLICATIONS
@@ -267,3 +270,10 @@ UNFOLD = {
 }
 
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+
+# Production (HTTPS) da CSRF va session cookie'lar ishlashi uchun
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    CSRF_COOKIE_SAMESITE = "Lax"
