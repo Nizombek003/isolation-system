@@ -57,6 +57,19 @@ class DoctorProfile(models.Model):
         return f"{self.user.get_username()} - {specialty}"
 
 
+class Region(models.Model):
+    name = models.CharField(_("Hudud nomi"), max_length=120, unique=True)
+    code = models.CharField(_("Hudud kodi"), max_length=20, blank=True)
+
+    class Meta:
+        verbose_name = _("Hudud")
+        verbose_name_plural = _("Hududlar")
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class TeamMember(models.Model):
     STATUS_CHOICES = [
         ("kuzatuv", _("Kuzatuvda")),
@@ -67,6 +80,14 @@ class TeamMember(models.Model):
     full_name = models.CharField(_("Ism familiya"), max_length=100)
     age = models.IntegerField(_("Yosh"))
     position = models.CharField(_("Lavozim"), max_length=100)
+    region = models.ForeignKey(
+        Region,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="members",
+        verbose_name=_("Hudud"),
+    )
     disease_type = models.ForeignKey(
         DiseaseType,
         on_delete=models.SET_NULL,
@@ -176,31 +197,13 @@ class HealthData(models.Model):
         ordering = ["-created_at"]
 
     def save(self, *args, **kwargs):
-        score = 0
+        # Fuzzy ko'p mezonli risk hisoblashni alohida modulga chiqaramiz
+        from .logic import calculate_risk
 
-        if self.temperature and self.temperature > 37.5:
-            score += 2
-
-        if self.symptoms:
-            score += 2
-
-        if self.close_contact:
-            score += 2
-
-        if self.chronic_disease:
-            score += 1
-
+        score, level, recommendation = calculate_risk(self)
         self.risk_score = score
-
-        if score >= 5:
-            self.risk_level = "yuqori"
-            self.recommendation = "To'liq izolyatsiya tavsiya etiladi."
-        elif score >= 3:
-            self.risk_level = "orta"
-            self.recommendation = "Masofaviy ish va qisman izolyatsiya tavsiya etiladi."
-        else:
-            self.risk_level = "past"
-            self.recommendation = "Holat barqaror, izolyatsiya talab etilmaydi."
+        self.risk_level = level
+        self.recommendation = recommendation
 
         super().save(*args, **kwargs)
 

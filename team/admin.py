@@ -14,6 +14,7 @@ from .models import (
     DoctorSpecialty,
     HealthData,
     IsolationCenter,
+    Region,
     TeamMember,
 )
 
@@ -100,20 +101,21 @@ class DoctorProfileAdmin(ModelAdmin):
 class TeamMemberAdmin(ModelAdmin):
     list_display = (
         "full_name",
+        "region",
         "disease_type",
         "assigned_doctor_display",
         "status",
         "age",
         "health_status",
     )
-    search_fields = ("full_name", "position", "disease_type__name", "assigned_doctor__username")
-    list_filter = ("status", "disease_type", "assigned_doctor")
+    search_fields = ("full_name", "position", "region__name", "disease_type__name", "assigned_doctor__username")
+    list_filter = ("status", "region", "disease_type", "assigned_doctor")
     list_per_page = 20
     list_filter_submit = True
 
     fieldsets = (
         ("Bemor profili", {
-            "fields": ("full_name", "age", "position", "status"),
+            "fields": ("full_name", "age", "position", "region", "status"),
         }),
         ("Tibbiy bog'lanish", {
             "fields": ("disease_type", "assigned_doctor", "notes"),

@@ -18,7 +18,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from .logic import get_risk_statistics
-from .models import ClinicSettings, DoctorProfile, HealthData, IsolationCenter, TeamMember
+from .models import ClinicSettings, DoctorProfile, HealthData, IsolationCenter, Region, TeamMember
 
 
 class CustomLoginView(LoginView):
@@ -65,6 +65,7 @@ def can_edit_patient_notes(user, patient):
 def get_base_patient_queryset(user):
     queryset = TeamMember.objects.select_related(
         "disease_type",
+        "region",
         "assigned_doctor__doctor_profile__specialty",
     )
     if is_doctor(user) and not is_admin(user):
@@ -183,6 +184,13 @@ def dashboard(request):
         "doctors": DoctorProfile.objects.count(),
     }
 
+    region_stats = list(
+        patient_queryset.exclude(region__isnull=True)
+        .values("region__name")
+        .annotate(total=Count("id"))
+        .order_by("-total", "region__name")[:5]
+    )
+
     disease_stats = list(
         patient_queryset.exclude(disease_type__isnull=True)
         .values("disease_type__name")
@@ -219,6 +227,7 @@ def dashboard(request):
         "recommendation": recommendation,
         "clinic": clinic,
         "patient_summary": patient_summary,
+        "region_stats": region_stats,
         "disease_stats": disease_stats,
         "doctor_load": doctor_load,
         "recent_cases": recent_cases,

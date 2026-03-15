@@ -327,7 +327,25 @@
             </div>
         </div>
         <div class="panel">
-            <div class="panel-title">Shifokor yuklamasi</div>
+            <div class="panel-title">Hududlar bo'yicha xavf</div>
+            <div class="list">
+                {% for item in region_stats %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ item.region__name }}</div>
+                            <div class="meta">Ushbu hududdagi kuzatuvdagi bemorlar</div>
+                        </div>
+                        <div class="pill medium">{{ item.total }} bemor</div>
+                    </div>
+                {% empty %}
+                    <div class="meta">Hududlar bo'yicha ma'lumot hali kiritilmagan.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-title">Shifokor yuklamasi</div>
             <div class="list">
                 {% for item in doctor_load %}
                     <div class="list-row">
