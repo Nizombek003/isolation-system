@@ -119,6 +119,49 @@
             padding: 12px 14px; border-radius: 14px; outline: none;
         }
         canvas { max-height: 280px; }
+        /* Hududlar — asosiy blok, kattaroq va diqqat markazida */
+        .region-hero {
+            margin-bottom: 28px;
+        }
+        .region-hero .panel {
+            padding: 32px 36px;
+            border-left: 4px solid var(--green);
+            background: linear-gradient(135deg, rgba(0, 200, 150, 0.06), rgba(58, 160, 255, 0.04));
+        }
+        .region-hero .panel-title {
+            font-size: 22px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .region-hero .panel-title::before {
+            content: "";
+            width: 8px;
+            height: 28px;
+            border-radius: 4px;
+            background: linear-gradient(180deg, var(--green), var(--blue));
+        }
+        .region-hero .list { gap: 16px; }
+        .region-hero .list-row {
+            padding: 18px 20px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            align-items: center;
+        }
+        .region-hero .list-title { font-size: 18px; }
+        .region-hero .meta { font-size: 14px; }
+        .region-hero .pill {
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .region-hero .region-empty {
+            font-size: 16px;
+            padding: 32px;
+            text-align: center;
+            color: var(--muted);
+        }
         footer { text-align: center; color: var(--muted); padding: 28px; font-size: 13px; }
         @media (max-width: 1100px) {
             .hero, .two-col, .three-col, .doctor-grid, .summary-strip, .stats, .case-grid, .filter-form { grid-template-columns: 1fr; }
@@ -128,6 +171,10 @@
             main { padding: 26px 20px 56px; }
             .hero-card, .panel, .summary-card, .case-card, .recommendation, .filter-panel { padding: 20px; }
             .hero-card h1 { font-size: 38px; }
+            .region-hero .panel { padding: 24px 20px; }
+            .region-hero .panel-title { font-size: 18px; }
+            .region-hero .list-row { padding: 14px 16px; }
+            .region-hero .list-title { font-size: 16px; }
         }
     </style>
 </head>
@@ -294,6 +341,25 @@
         </div>
     </section>
 
+    <section class="region-hero">
+        <div class="panel">
+            <div class="panel-title">Hududlar bo'yicha xavf</div>
+            <div class="list">
+                {% for item in region_stats %}
+                    <div class="list-row">
+                        <div>
+                            <div class="list-title">{{ item.region__name }}</div>
+                            <div class="meta">Ushbu hududdagi kuzatuvdagi bemorlar soni</div>
+                        </div>
+                        <div class="pill medium">{{ item.total }} bemor</div>
+                    </div>
+                {% empty %}
+                    <div class="region-empty">Hududlar bo'yicha ma'lumot hali kiritilmagan. Admin panelda Hududlar va Bemorlarda «Hudud» maydonini to'ldiring.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
     <section class="two-col">
         <div class="panel">
             <div class="panel-title">Umumiy xavf taqsimoti</div>
@@ -327,25 +393,7 @@
             </div>
         </div>
         <div class="panel">
-            <div class="panel-title">Hududlar bo'yicha xavf</div>
-            <div class="list">
-                {% for item in region_stats %}
-                    <div class="list-row">
-                        <div>
-                            <div class="list-title">{{ item.region__name }}</div>
-                            <div class="meta">Ushbu hududdagi kuzatuvdagi bemorlar</div>
-                        </div>
-                        <div class="pill medium">{{ item.total }} bemor</div>
-                    </div>
-                {% empty %}
-                    <div class="meta">Hududlar bo'yicha ma'lumot hali kiritilmagan.</div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <section class="panel">
-        <div class="panel-title">Shifokor yuklamasi</div>
+            <div class="panel-title">Shifokor yuklamasi</div>
             <div class="list">
                 {% for item in doctor_load %}
                     <div class="list-row">
