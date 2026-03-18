@@ -124,8 +124,36 @@ class TeamMember(models.Model):
 class IsolationCenter(models.Model):
     """Izolyatsiya markazi — jamoat salomatligi va tezkor joylashtirish uchun (topshiriq varaqasi talabi)."""
     name = models.CharField(_("Markaz nomi"), max_length=200)
+    region = models.ForeignKey(
+        Region,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="isolation_centers",
+        verbose_name=_("Hudud"),
+    )
     address = models.TextField(_("Manzil"), blank=True)
     capacity = models.PositiveIntegerField(_("Sig'im (kishi)"), default=0, help_text=_("Qabul qila oladigan bemorlar soni"))
+    occupancy_rate = models.PositiveSmallIntegerField(
+        _("Bandlik foizi"),
+        default=0,
+        help_text=_("0-100 oralig'ida joriy bandlik foizi"),
+    )
+    readiness_score = models.PositiveSmallIntegerField(
+        _("Tezkor tayyorgarlik balli"),
+        default=5,
+        help_text=_("0-10 oralig'ida baholang"),
+    )
+    infrastructure_score = models.PositiveSmallIntegerField(
+        _("Infratuzilma balli"),
+        default=5,
+        help_text=_("0-10 oralig'ida baholang"),
+    )
+    travel_time_minutes = models.PositiveIntegerField(
+        _("Yetib borish vaqti (daq)"),
+        default=30,
+        help_text=_("Markazga o'rtacha yetib borish vaqti"),
+    )
     is_active = models.BooleanField(_("Faol"), default=True)
     notes = models.TextField(_("Izoh"), blank=True)
 

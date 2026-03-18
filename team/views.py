@@ -17,7 +17,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from .logic import get_risk_statistics
+from .logic import build_region_priority_map, get_risk_statistics, rank_isolation_centers
 from .models import ClinicSettings, DoctorProfile, HealthData, IsolationCenter, Region, TeamMember
 
 
@@ -210,11 +210,29 @@ def dashboard(request):
 
     recent_cases = dashboard_queryset[:6]
 
-    isolation_centers = list(IsolationCenter.objects.filter(is_active=True)[:5])
+    high_risk_region_rows = list(
+        dashboard_queryset.filter(
+            risk_level="yuqori",
+            member__region__isnull=False,
+        )
+        .values("member__region_id")
+        .annotate(total=Count("member_id", distinct=True))
+    )
+    region_priority_map = build_region_priority_map(high_risk_region_rows)
+    center_rankings = rank_isolation_centers(
+        IsolationCenter.objects.filter(is_active=True).select_related("region"),
+        region_priority_map,
+    )[:5]
+    isolation_centers = [item["center"] for item in center_rankings]
     if stats["high"] > 0:
         recommendation = "Yuqori xavf aniqlangan. To'liq izolyatsiya va shifokor nazorati tavsiya etiladi."
-        if isolation_centers:
-            recommendation += " Yuqori xavfli bemorlarni izolyatsiya markazlariga yo'naltirish mumkin (Admin → Izolyatsiya markazlari)."
+        if center_rankings:
+            top_item = center_rankings[0]
+            recommendation += (
+                f" Fuzzy MCDM bo'yicha eng mos markaz: {top_item['center'].name} "
+                f"({top_item['score']} ball)."
+            )
+            recommendation += " Yuqori xavfli bemorlarni izolyatsiya markazlariga yo'naltirish mumkin (Admin -> Izolyatsiya markazlari)."
     elif stats["medium"] > 0:
         recommendation = "O'rta xavf holatlari bor. Masofaviy ish va qayta ko'rik tavsiya etiladi."
     else:
@@ -222,6 +240,7 @@ def dashboard(request):
 
     context = {
         "isolation_centers": isolation_centers,
+        "center_rankings": center_rankings,
         "stats": stats,
         "weekly_stats": weekly_stats,
         "recommendation": recommendation,

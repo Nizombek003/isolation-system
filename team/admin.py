@@ -287,9 +287,18 @@ class HealthDataAdmin(ModelAdmin):
 
 @admin.register(IsolationCenter)
 class IsolationCenterAdmin(ModelAdmin):
-    list_display = ("name", "address_short", "capacity", "is_active")
-    list_filter = ("is_active",)
-    search_fields = ("name", "address", "notes")
+    list_display = (
+        "name",
+        "region",
+        "capacity",
+        "occupancy_rate",
+        "readiness_score",
+        "infrastructure_score",
+        "travel_time_minutes",
+        "is_active",
+    )
+    list_filter = ("is_active", "region")
+    search_fields = ("name", "region__name", "address", "notes")
 
     @display(description="Manzil")
     def address_short(self, obj):
@@ -299,7 +308,18 @@ class IsolationCenterAdmin(ModelAdmin):
 
     fieldsets = (
         ("Izolyatsiya markazi (jamoat salomatligi)", {
-            "fields": ("name", "address", "capacity", "is_active", "notes"),
+            "fields": (
+                "name",
+                "region",
+                "address",
+                "capacity",
+                "occupancy_rate",
+                "readiness_score",
+                "infrastructure_score",
+                "travel_time_minutes",
+                "is_active",
+                "notes",
+            ),
         }),
     )
 
@@ -364,4 +384,3 @@ class UserAdmin(DjangoUserAdmin):
     def set_role_viewer(self, request, queryset):
         updated = _set_user_role(queryset, "Viewer")
         self.message_user(request, f"{updated} ta foydalanuvchi Viewer roliga o'tkazildi.")
-

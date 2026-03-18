@@ -5,7 +5,16 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from .admin import HealthDataAdmin, TeamMemberAdmin, _set_user_role
-from .models import DiseaseType, DoctorProfile, DoctorSpecialty, HealthData, TeamMember
+from .logic import build_region_priority_map, rank_isolation_centers
+from .models import (
+    DiseaseType,
+    DoctorProfile,
+    DoctorSpecialty,
+    HealthData,
+    IsolationCenter,
+    Region,
+    TeamMember,
+)
 
 
 class CustomLoginRedirectTests(TestCase):
@@ -181,12 +190,15 @@ class DoctorDashboardAndPatientDetailTests(TestCase):
         DoctorProfile.objects.get_or_create(user=self.doctor_user, defaults={"specialty": specialty, "room": "9C"})
         DoctorProfile.objects.get_or_create(user=self.other_doctor, defaults={"specialty": specialty, "room": "10A"})
 
+        region_a, _ = Region.objects.get_or_create(name="Samarqand", defaults={"code": "SAM"})
+        region_b, _ = Region.objects.get_or_create(name="Navoiy", defaults={"code": "NAV"})
         disease, _ = DiseaseType.objects.get_or_create(name="Bronxit", defaults={"isolation_required": False})
         other_disease, _ = DiseaseType.objects.get_or_create(name="Allergiya", defaults={"isolation_required": False})
         self.my_patient = TeamMember.objects.create(
             full_name="Gulnoza Karimova",
             age=31,
             position="Operator",
+            region=region_a,
             disease_type=disease,
             assigned_doctor=self.doctor_user,
             status="davolanish",
@@ -196,6 +208,7 @@ class DoctorDashboardAndPatientDetailTests(TestCase):
             full_name="Gulbahor Saidova",
             age=29,
             position="Laborant",
+            region=region_a,
             disease_type=other_disease,
             assigned_doctor=self.doctor_user,
             status="barqaror",
@@ -205,15 +218,44 @@ class DoctorDashboardAndPatientDetailTests(TestCase):
             full_name="Dilshod Ergashev",
             age=42,
             position="Manager",
+            region=region_b,
             disease_type=disease,
             assigned_doctor=self.other_doctor,
             status="kuzatuv",
         )
 
-        HealthData.objects.create(member=self.my_patient, entered_by=self.doctor_user, temperature=38.1, symptoms=True)
+        HealthData.objects.create(
+            member=self.my_patient,
+            entered_by=self.doctor_user,
+            temperature=38.1,
+            symptoms=True,
+            close_contact=True,
+            chronic_disease=True,
+        )
         HealthData.objects.create(member=self.my_patient, entered_by=self.doctor_user, temperature=37.2)
         HealthData.objects.create(member=self.second_patient, entered_by=self.doctor_user, temperature=36.7)
         HealthData.objects.create(member=self.other_patient, entered_by=self.other_doctor, temperature=36.9)
+
+        self.center_a = IsolationCenter.objects.create(
+            name="Samarqand Markaz 1",
+            region=region_a,
+            capacity=120,
+            occupancy_rate=30,
+            readiness_score=9,
+            infrastructure_score=8,
+            travel_time_minutes=18,
+            is_active=True,
+        )
+        self.center_b = IsolationCenter.objects.create(
+            name="Navoiy Markaz 2",
+            region=region_b,
+            capacity=150,
+            occupancy_rate=75,
+            readiness_score=6,
+            infrastructure_score=6,
+            travel_time_minutes=50,
+            is_active=True,
+        )
 
     def test_doctor_dashboard_contains_personal_context(self):
         self.client.force_login(self.doctor_user)
@@ -272,3 +314,58 @@ class DoctorDashboardAndPatientDetailTests(TestCase):
         response = self.client.get(reverse("patient_detail", args=[self.my_patient.id]))
 
         self.assertEqual(response.status_code, 404)
+
+    def test_dashboard_contains_ranked_isolation_centers(self):
+        self.client.force_login(self.doctor_user)
+
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        rankings = response.context["center_rankings"]
+        self.assertTrue(rankings)
+        self.assertEqual(rankings[0]["center"].id, self.center_a.id)
+        self.assertContains(response, "Fuzzy MCDM")
+
+
+class IsolationCenterRankingLogicTests(TestCase):
+    def test_region_priority_map_normalizes_distribution(self):
+        rows = [
+            {"member__region_id": 1, "total": 3},
+            {"member__region_id": 2, "total": 1},
+        ]
+
+        result = build_region_priority_map(rows)
+
+        self.assertEqual(result[1], 0.75)
+        self.assertEqual(result[2], 0.25)
+
+    def test_rank_isolation_centers_orders_by_score(self):
+        region = Region.objects.create(name="Buxoro", code="BUX")
+        better = IsolationCenter.objects.create(
+            name="Center Better",
+            region=region,
+            capacity=100,
+            occupancy_rate=20,
+            readiness_score=9,
+            infrastructure_score=9,
+            travel_time_minutes=15,
+            is_active=True,
+        )
+        weaker = IsolationCenter.objects.create(
+            name="Center Weaker",
+            region=region,
+            capacity=100,
+            occupancy_rate=80,
+            readiness_score=4,
+            infrastructure_score=4,
+            travel_time_minutes=70,
+            is_active=True,
+        )
+
+        rankings = rank_isolation_centers(
+            IsolationCenter.objects.filter(id__in=[better.id, weaker.id]),
+            {region.id: 1.0},
+        )
+
+        self.assertEqual(rankings[0]["center"].id, better.id)
+        self.assertGreater(rankings[0]["score"], rankings[1]["score"])

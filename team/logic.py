@@ -11,7 +11,7 @@ Mezonlar:
 Har bir mezon uchun [0, 1] oralig'ida fuzzy daraja hisoblanadi va
 og'irliklangan yig'indi ko'rinishida umumiy xavf darajasi olinadi.
 """
-from .models import HealthData
+from .models import HealthData, IsolationCenter
 
 
 def _temp_membership(value: float | None) -> float:
@@ -114,3 +114,102 @@ def get_risk_statistics(queryset=None):
         "medium": queryset.filter(risk_level="orta").count(),
         "high": queryset.filter(risk_level="yuqori").count(),
     }
+
+
+def _clamp(value: float, minimum: float, maximum: float) -> float:
+    return max(minimum, min(value, maximum))
+
+
+def _normalize_benefit(value: float, min_value: float, max_value: float) -> float:
+    if max_value <= min_value:
+        return 0.0
+    return _clamp((value - min_value) / (max_value - min_value), 0.0, 1.0)
+
+
+def _normalize_cost(value: float, min_value: float, max_value: float) -> float:
+    if max_value <= min_value:
+        return 0.0
+    return _clamp((max_value - value) / (max_value - min_value), 0.0, 1.0)
+
+
+def build_region_priority_map(rows):
+    """
+    rows format:
+    [
+        {"member__region_id": <id>, "total": <int>},
+        ...
+    ]
+    """
+    total = sum(int(item.get("total", 0) or 0) for item in rows)
+    if total <= 0:
+        return {}
+
+    result = {}
+    for item in rows:
+        region_id = item.get("member__region_id")
+        if not region_id:
+            continue
+        count = int(item.get("total", 0) or 0)
+        result[region_id] = round(count / total, 4)
+    return result
+
+
+def rank_isolation_centers(centers, region_priority_map=None):
+    """
+    Fuzzy MCDM ranking for isolation-center selection.
+    Weighted criteria:
+    - availability (1 - occupancy): 0.35
+    - readiness score: 0.25
+    - access time (cost): 0.20
+    - infrastructure score: 0.10
+    - region priority (high-risk density): 0.10
+    """
+    region_priority_map = region_priority_map or {}
+    rankings = []
+
+    for center in centers:
+        occupancy = float(getattr(center, "occupancy_rate", 0) or 0)
+        readiness = float(getattr(center, "readiness_score", 0) or 0)
+        access_time = float(getattr(center, "travel_time_minutes", 0) or 0)
+        infrastructure = float(getattr(center, "infrastructure_score", 0) or 0)
+        region_priority = float(region_priority_map.get(center.region_id, 0.0))
+
+        availability_mu = _normalize_benefit(100.0 - occupancy, 0.0, 100.0)
+        readiness_mu = _normalize_benefit(readiness, 0.0, 10.0)
+        access_mu = _normalize_cost(access_time, 10.0, 120.0)
+        infrastructure_mu = _normalize_benefit(infrastructure, 0.0, 10.0)
+        region_mu = _clamp(region_priority, 0.0, 1.0)
+
+        fuzzy_value = (
+            0.35 * availability_mu
+            + 0.25 * readiness_mu
+            + 0.20 * access_mu
+            + 0.10 * infrastructure_mu
+            + 0.10 * region_mu
+        )
+        score = round(fuzzy_value * 100, 2)
+
+        if score >= 75:
+            label = "A'lo mos"
+        elif score >= 55:
+            label = "Yaxshi mos"
+        elif score >= 40:
+            label = "Qoniqarli"
+        else:
+            label = "Past ustuvorlik"
+
+        rankings.append(
+            {
+                "center": center,
+                "score": score,
+                "label": label,
+                "availability_mu": round(availability_mu, 3),
+                "readiness_mu": round(readiness_mu, 3),
+                "access_mu": round(access_mu, 3),
+                "infrastructure_mu": round(infrastructure_mu, 3),
+                "region_mu": round(region_mu, 3),
+            }
+        )
+
+    rankings.sort(key=lambda row: (-row["score"], row["center"].name.lower()))
+    return rankings
