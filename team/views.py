@@ -17,6 +17,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from .hospital_catalog import get_registon_hospitals_for_dashboard
 from .logic import build_region_priority_map, get_risk_statistics, rank_isolation_centers
 from .models import ClinicSettings, DoctorProfile, HealthData, IsolationCenter, Region, TeamMember
 
@@ -250,6 +251,7 @@ def dashboard(request):
         "disease_stats": disease_stats,
         "doctor_load": doctor_load,
         "recent_cases": recent_cases,
+        "registon_hospitals": get_registon_hospitals_for_dashboard(),
         "is_doctor_dashboard": is_doctor(request.user) and not is_admin(request.user),
         "active_filters": active_filters,
         "disease_options": patient_queryset.model.objects.exclude(disease_type__isnull=True).values_list("disease_type__id", "disease_type__name").distinct().order_by("disease_type__name"),

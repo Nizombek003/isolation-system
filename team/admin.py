@@ -1,4 +1,7 @@
+import json
+
 from django.contrib import admin
+from django import forms
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from django.contrib.auth.models import Group, User
 from django.core.exceptions import PermissionDenied
@@ -7,6 +10,7 @@ from django.utils.html import format_html
 from unfold.admin import ModelAdmin
 from unfold.decorators import display
 
+from .hospital_catalog import get_hospital_autofill_map, get_hospital_choice_pairs
 from .models import (
     ClinicSettings,
     DiseaseType,
@@ -287,6 +291,34 @@ class HealthDataAdmin(ModelAdmin):
 
 @admin.register(IsolationCenter)
 class IsolationCenterAdmin(ModelAdmin):
+    class IsolationCenterAdminForm(forms.ModelForm):
+        name = forms.ChoiceField(label="Markaz nomi", required=True, choices=())
+
+        class Meta:
+            model = IsolationCenter
+            fields = "__all__"
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            choices = [("", "Kasalxonani tanlang")] + get_hospital_choice_pairs()
+            self.fields["name"].choices = choices
+            self.fields["name"].widget.attrs["data-hospital-map"] = json.dumps(
+                get_hospital_autofill_map(),
+                ensure_ascii=False,
+            )
+
+        def clean_name(self):
+            selected = self.cleaned_data["name"]
+            allowed_names = {name for name, _label in get_hospital_choice_pairs()}
+            if selected not in allowed_names:
+                raise forms.ValidationError("Faqat belgilangan 10 ta kasalxonadan tanlang.")
+            return selected
+
+    form = IsolationCenterAdminForm
+
+    class Media:
+        js = ("team/js/isolation_center_autofill.js",)
+
     list_display = (
         "name",
         "region",

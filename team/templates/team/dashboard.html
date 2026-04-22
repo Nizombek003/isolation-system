@@ -383,6 +383,26 @@
     </section>
 
     <section class="panel">
+        <div class="panel-title">Registon maydoniga nisbatan eng yaqin 10 ta kasalxona</div>
+        <div class="list">
+            {% for hospital in registon_hospitals %}
+                <div class="list-row">
+                    <div>
+                        <div class="list-title">{{ hospital.name }}</div>
+                        <div class="meta">{{ hospital.note }}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="pill medium">{{ hospital.distance_km }} km</div>
+                        <div class="meta" style="margin-top:6px;">Sig'im: {{ hospital.capacity_range }} o'rin</div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="meta">Kasalxonalar ro'yxati mavjud emas.</div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="panel">
         <div class="panel-title">Izolyatsiya markazini tanlash (Fuzzy MCDM ranking)</div>
         <div class="center-rank-list">
             {% for item in center_rankings %}
