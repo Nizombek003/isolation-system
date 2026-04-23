@@ -5,7 +5,6 @@ from django.views.generic.base import RedirectView
 from .views import (
     CustomLoginView,
     add_health,
-    create_admin,
     dashboard,
     generate_report,
     monthly_trend,
