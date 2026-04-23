@@ -21,5 +21,5 @@ urlpatterns = [
     path("report/", generate_report, name="report"),
     path("add-health/", add_health, name="add_health"),
     path("monthly-trend/", monthly_trend, name="monthly_trend"),
-    path("create-admin/", create_admin),
+    
 ]
