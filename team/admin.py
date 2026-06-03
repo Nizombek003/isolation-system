@@ -25,6 +25,44 @@ from .models import (
 
 ROLE_GROUPS = ("Admin", "Doctor", "Viewer")
 
+REGION_CHOICES = (
+    ("Samarqand shahri", "Samarqand shahri"),
+    ("Samarqand tumani", "Samarqand tumani"),
+    ("Urgut tumani", "Urgut tumani"),
+    ("Pastdarg'om tumani", "Pastdarg'om tumani"),
+    ("Toyloq tumani", "Toyloq tumani"),
+    ("Jomboy tumani", "Jomboy tumani"),
+    ("Bulung'ur tumani", "Bulung'ur tumani"),
+    ("Ishtixon tumani", "Ishtixon tumani"),
+    ("Kattaqo'rg'on shahri", "Kattaqo'rg'on shahri"),
+    ("Kattaqo'rg'on tumani", "Kattaqo'rg'on tumani"),
+    ("Narpay tumani", "Narpay tumani"),
+    ("Nurobod tumani", "Nurobod tumani"),
+    ("Oqdaryo tumani", "Oqdaryo tumani"),
+    ("Paxtachi tumani", "Paxtachi tumani"),
+    ("Payariq tumani", "Payariq tumani"),
+    ("Qo'shrabot tumani", "Qo'shrabot tumani"),
+)
+
+REGION_CODES = {
+    "Samarqand shahri": "SAM-SHAHAR",
+    "Samarqand tumani": "SAM-TUMAN",
+    "Urgut tumani": "URGUT",
+    "Pastdarg'om tumani": "PASTDARGOM",
+    "Toyloq tumani": "TOYLOQ",
+    "Jomboy tumani": "JOMBOY",
+    "Bulung'ur tumani": "BULUNGUR",
+    "Ishtixon tumani": "ISHTIXON",
+    "Kattaqo'rg'on shahri": "KATTAQORGON-SHAHAR",
+    "Kattaqo'rg'on tumani": "KATTAQORGON-TUMAN",
+    "Narpay tumani": "NARPAY",
+    "Nurobod tumani": "NUROBOD",
+    "Oqdaryo tumani": "OQDARYO",
+    "Paxtachi tumani": "PAXTACHI",
+    "Payariq tumani": "PAYARIQ",
+    "Qo'shrabot tumani": "QOSHRABOT",
+}
+
 
 def is_admin_user(user):
     return user.is_superuser or user.groups.filter(name="Admin").exists()
@@ -92,9 +130,27 @@ class DiseaseTypeAdmin(ModelAdmin):
 
 @admin.register(Region)
 class RegionAdmin(ModelAdmin):
+    class RegionAdminForm(forms.ModelForm):
+        name = forms.ChoiceField(label="Hudud nomi", choices=(("", "Hududni tanlang"),) + REGION_CHOICES)
+
+        class Meta:
+            model = Region
+            fields = "__all__"
+
+        def clean(self):
+            cleaned_data = super().clean()
+            name = cleaned_data.get("name")
+            if name and not cleaned_data.get("code"):
+                cleaned_data["code"] = REGION_CODES.get(name, "")
+            return cleaned_data
+
+    form = RegionAdminForm
     list_display = ("name", "code")
     search_fields = ("name", "code")
     ordering = ("name",)
+
+    class Media:
+        css = {"all": ("team/css/admin_fixes.css",)}
 
 
 @admin.register(DoctorProfile)

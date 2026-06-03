@@ -149,6 +149,9 @@ UNFOLD = {
     "SHOW_VIEW_ON_SITE": True,
     "SHOW_BACK_BUTTON": True,
     "SHOW_LANGUAGES": False,
+    "STYLES": [
+        lambda request: "/static/team/css/admin_fixes.css",
+    ],
     "COLORS": {
         "font": {
             "subtle-light": "107 114 128",

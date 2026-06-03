@@ -1,0 +1,19 @@
+.change-form .breadcrumbs,
+.change-list .breadcrumbs,
+.dashboard .breadcrumbs {
+    overflow: visible;
+}
+
+.change-form h1,
+.change-list h1 {
+    margin-left: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+@media (min-width: 1024px) {
+    .change-form main,
+    .change-list main {
+        overflow-x: hidden;
+    }
+}
