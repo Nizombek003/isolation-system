@@ -90,6 +90,13 @@ class DiseaseTypeAdmin(ModelAdmin):
         return obj.patients.count()
 
 
+@admin.register(Region)
+class RegionAdmin(ModelAdmin):
+    list_display = ("name", "code")
+    search_fields = ("name", "code")
+    ordering = ("name",)
+
+
 @admin.register(DoctorProfile)
 class DoctorProfileAdmin(ModelAdmin):
     list_display = ("user", "specialty", "room", "patient_count")

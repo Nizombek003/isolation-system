@@ -231,6 +231,11 @@ UNFOLD = {
                         "link": "/admin/team/doctorprofile/",
                     },
                     {
+                        "title": "Hududlar",
+                        "icon": "map",
+                        "link": "/admin/team/region/",
+                    },
+                    {
                         "title": "Klinika sozlamalari",
                         "icon": "settings_suggest",
                         "link": "/admin/team/clinicsettings/",
