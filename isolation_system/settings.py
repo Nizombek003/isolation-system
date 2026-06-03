@@ -229,7 +229,7 @@ UNFOLD = {
                         "link": "/admin/team/doctorspecialty/",
                     },
                     {
-                        "title": "Shifokor profillari",
+                        "title": "Shifokorlar",
                         "icon": "badge",
                         "link": "/admin/team/doctorprofile/",
                     },

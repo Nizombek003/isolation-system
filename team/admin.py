@@ -155,9 +155,68 @@ class RegionAdmin(ModelAdmin):
 
 @admin.register(DoctorProfile)
 class DoctorProfileAdmin(ModelAdmin):
+    class DoctorProfileAdminForm(forms.ModelForm):
+        username = forms.CharField(label="Login", required=False)
+        password = forms.CharField(label="Parol", required=False, widget=forms.PasswordInput)
+        first_name = forms.CharField(label="Ism", required=False)
+        last_name = forms.CharField(label="Familiya", required=False)
+        email = forms.EmailField(label="Email", required=False)
+
+        class Meta:
+            model = DoctorProfile
+            fields = ("specialty", "room")
+
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            if self.instance and self.instance.pk:
+                return
+
+            self.fields["username"].required = True
+            self.fields["password"].required = True
+
+        def clean_username(self):
+            username = self.cleaned_data.get("username", "").strip()
+            if username and User.objects.filter(username=username).exists():
+                raise forms.ValidationError("Bu login bilan foydalanuvchi allaqachon mavjud.")
+            return username
+
+    form = DoctorProfileAdminForm
     list_display = ("user", "specialty", "room", "patient_count")
     search_fields = ("user__username", "user__first_name", "user__last_name", "specialty__name")
     list_filter = ("specialty",)
+
+    def get_fieldsets(self, request, obj=None):
+        if obj:
+            return (
+                ("Shifokor profili", {
+                    "fields": ("specialty", "room"),
+                }),
+            )
+
+        return (
+            ("Shifokor login ma'lumotlari", {
+                "fields": ("username", "password", "first_name", "last_name", "email"),
+            }),
+            ("Shifokor profili", {
+                "fields": ("specialty", "room"),
+            }),
+        )
+
+    def save_model(self, request, obj, form, change):
+        if not change:
+            user = User.objects.create_user(
+                username=form.cleaned_data["username"],
+                password=form.cleaned_data["password"],
+                first_name=form.cleaned_data.get("first_name", ""),
+                last_name=form.cleaned_data.get("last_name", ""),
+                email=form.cleaned_data.get("email", ""),
+                is_staff=True,
+            )
+            doctor_group, _ = Group.objects.get_or_create(name="Doctor")
+            user.groups.add(doctor_group)
+            obj.user = user
+
+        super().save_model(request, obj, form, change)
 
     @display(description="Bemorlar soni")
     def patient_count(self, obj):
